@@ -1,8 +1,7 @@
 # Universal Utility Risk Analytics Platform
-# Streamlit Cloud Requirements
-# Compatible with Python 3.11, 3.12, and 3.13
+# Streamlit Cloud Requirements (Python 3.12)
 
-# Core dependencies (always required)
+# Core dependencies
 numpy>=1.21.0,<2.0
 pandas>=2.1.0
 streamlit>=1.28.0
@@ -13,6 +12,7 @@ pyyaml>=6.0.1
 matplotlib>=3.5.0
 scipy>=1.8.0
 
-# Note: Advanced forecasting models (ARIMA, Prophet) will be automatically
-# disabled if they fail to install. The Simple Moving Average model will
-# always be available and works without additional dependencies.
+# Forecasting models (requires Python 3.12)
+statsmodels>=0.14.0
+pmdarima>=2.0.0
+prophet>=1.1.0
