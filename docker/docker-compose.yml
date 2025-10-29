@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Streamlit Dashboard
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: uurap-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ../data:/app/data
+      - ../config.yaml:/app/config.yaml
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: streamlit run dashboard/app.py --server.port=8501 --server.address=0.0.0.0
+    restart: unless-stopped
+
+  # FastAPI Backend (optional)
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: uurap-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../data:/app/data
+      - ../config.yaml:/app/config.yaml
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+# Volumes
+volumes:
+  data:

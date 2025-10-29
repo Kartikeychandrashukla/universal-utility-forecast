@@ -1,0 +1,146 @@
+# Universal Utility Risk Analytics Platform Configuration
+
+# Application Settings
+app:
+  name: "Universal Utility Risk Analytics Platform"
+  version: "1.0.0"
+  debug: true
+  log_level: "INFO"
+
+# Data Settings
+data:
+  upload_dir: "data/uploads"
+  output_dir: "data/outputs"
+  sample_dir: "data/sample_data"
+  max_file_size_mb: 100
+  allowed_formats: ["csv", "xlsx", "json"]
+  date_formats: ["%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%d/%m/%Y"]
+
+# Forecasting Settings
+forecasting:
+  default_horizon: 90  # days
+  min_history_days: 365
+  train_test_split: 0.8
+
+  models:
+    arima:
+      enabled: true
+      auto_select_order: true
+      max_p: 5
+      max_d: 2
+      max_q: 5
+
+    prophet:
+      enabled: true
+      changepoint_prior_scale: 0.05
+      seasonality_prior_scale: 10.0
+      yearly_seasonality: true
+      weekly_seasonality: true
+      daily_seasonality: false
+
+    regression:
+      enabled: true
+      features: ["trend", "seasonal", "lag"]
+
+    ensemble:
+      enabled: true
+      weights: "auto"  # or provide specific weights
+
+# Valuation Settings
+valuation:
+  monte_carlo:
+    simulations: 10000
+    seed: 42
+    confidence_levels: [0.95, 0.99]
+
+  storage:
+    default_capacity: 1000
+    default_injection_rate: 100
+    default_withdrawal_rate: 100
+    default_injection_cost: 0.5
+    default_withdrawal_cost: 0.5
+    default_storage_cost: 0.1
+
+  optimization:
+    method: "cvxpy"  # or "scipy"
+    solver: "ECOS"
+    max_iterations: 1000
+
+# Analytics Settings
+analytics:
+  seasonality:
+    periods: [7, 30, 365]  # days
+    detect_threshold: 0.1
+
+  volatility:
+    window: 30  # days
+    methods: ["std", "ewma", "garch"]
+
+  risk_metrics:
+    var_confidence: 0.95
+    cvar_confidence: 0.95
+
+# Utility Type Detection
+utility_types:
+  natural_gas:
+    keywords: ["gas", "natural gas", "ng", "henry hub"]
+    seasonality: "winter_peak"
+    typical_unit: "MMBtu"
+
+  electricity:
+    keywords: ["electricity", "power", "mwh", "kwh"]
+    seasonality: "summer_winter_peak"
+    typical_unit: "MWh"
+
+  crude_oil:
+    keywords: ["oil", "crude", "wti", "brent"]
+    seasonality: "low"
+    typical_unit: "barrel"
+
+  water:
+    keywords: ["water", "h2o"]
+    seasonality: "summer_peak"
+    typical_unit: "gallon"
+
+# Visualization Settings
+visualization:
+  theme: "plotly_white"
+  color_scheme: ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+  figure_width: 1200
+  figure_height: 600
+  show_grid: true
+
+# API Settings
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins: ["*"]
+  rate_limit: 100  # requests per minute
+
+# Dashboard Settings
+dashboard:
+  port: 8501
+  theme: "light"
+  layout: "wide"
+  sidebar_state: "expanded"
+
+# Database Settings (Optional)
+database:
+  enabled: false
+  type: "postgresql"
+  host: "localhost"
+  port: 5432
+  name: "utility_analytics"
+
+# Caching Settings
+cache:
+  enabled: true
+  ttl: 3600  # seconds
+  max_size: 1000  # MB
+
+# Reporting Settings
+reporting:
+  formats: ["pdf", "html", "excel"]
+  include_charts: true
+  include_statistics: true
+  include_recommendations: true
