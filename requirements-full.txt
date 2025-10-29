@@ -13,6 +13,7 @@ pyyaml>=6.0.1
 
 # Forecasting models
 statsmodels>=0.14.0
+xgboost>=2.0.0
 pmdarima>=2.0.0
 prophet>=1.1.0
 

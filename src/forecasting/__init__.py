@@ -4,8 +4,20 @@
 from src.forecasting.base_forecaster import BaseForecaster
 from src.forecasting.simple_ma_model import SimpleMAForecaster
 
-# Optional models - gracefully handle missing dependencies
+# Core models - gracefully handle missing dependencies
 __all__ = ["BaseForecaster", "SimpleMAForecaster"]
+
+try:
+    from src.forecasting.xgboost_model import XGBoostForecaster
+    __all__.append("XGBoostForecaster")
+except (ImportError, ModuleNotFoundError):
+    pass
+
+try:
+    from src.forecasting.exponential_smoothing_model import ExponentialSmoothingForecaster
+    __all__.append("ExponentialSmoothingForecaster")
+except (ImportError, ModuleNotFoundError):
+    pass
 
 try:
     from src.forecasting.arima_model import ARIMAForecaster

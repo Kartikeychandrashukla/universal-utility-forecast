@@ -1,5 +1,5 @@
 # Universal Utility Risk Analytics Platform
-# Streamlit Cloud Requirements (Python 3.12)
+# Compatible with Python 3.12, 3.13
 
 # Core dependencies
 numpy>=1.21.0,<2.0
@@ -12,7 +12,10 @@ pyyaml>=6.0.1
 matplotlib>=3.5.0
 scipy>=1.8.0
 
-# Forecasting models (requires Python 3.12)
+# Forecasting models (Python 3.12+ compatible)
 statsmodels>=0.14.0
-pmdarima>=2.0.0
-prophet>=1.1.0
+xgboost>=2.0.0
+
+# Optional (may not work on Python 3.13)
+# pmdarima>=2.0.0
+# prophet>=1.1.0

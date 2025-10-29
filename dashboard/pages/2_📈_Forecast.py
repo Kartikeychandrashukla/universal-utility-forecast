@@ -12,6 +12,20 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Try to import forecasting models
 try:
+    from src.forecasting.xgboost_model import XGBoostForecaster
+    XGBOOST_AVAILABLE = True
+except (ImportError, ModuleNotFoundError) as e:
+    XGBOOST_AVAILABLE = False
+    XGBOOST_ERROR = str(e)
+
+try:
+    from src.forecasting.exponential_smoothing_model import ExponentialSmoothingForecaster
+    EXP_SMOOTH_AVAILABLE = True
+except (ImportError, ModuleNotFoundError) as e:
+    EXP_SMOOTH_AVAILABLE = False
+    EXP_SMOOTH_ERROR = str(e)
+
+try:
     from src.forecasting.arima_model import ARIMAForecaster
     ARIMA_AVAILABLE = True
 except (ImportError, ModuleNotFoundError) as e:
@@ -62,6 +76,10 @@ with col1:
 with col2:
     # Build list of available models
     available_models = []
+    if XGBOOST_AVAILABLE:
+        available_models.append("XGBoost")
+    if EXP_SMOOTH_AVAILABLE:
+        available_models.append("Exponential Smoothing")
     if ARIMA_AVAILABLE:
         available_models.append("ARIMA")
     if PROPHET_AVAILABLE:
@@ -71,7 +89,7 @@ with col2:
     model_type = st.selectbox(
         "Forecast Model",
         available_models,
-        index=len(available_models) - 1,  # Default to Simple MA
+        index=0,  # Default to first available model
         help="Select forecasting algorithm"
     )
 
@@ -127,7 +145,22 @@ if st.button("🚀 Generate Forecast", type="primary"):
     with st.spinner(f"Generating {model_type} forecast..."):
         try:
             # Initialize forecaster
-            if model_type == "ARIMA":
+            if model_type == "XGBoost":
+                forecaster = XGBoostForecaster(
+                    n_lags=min(7, len(train_data) // 4),
+                    confidence_level=confidence_level
+                )
+                forecaster.fit(train_data)
+                forecast_df = forecaster.predict(forecast_horizon)
+
+            elif model_type == "Exponential Smoothing":
+                forecaster = ExponentialSmoothingForecaster(
+                    confidence_level=confidence_level
+                )
+                forecaster.fit(train_data)
+                forecast_df = forecaster.predict(forecast_horizon)
+
+            elif model_type == "ARIMA":
                 if not ARIMA_AVAILABLE:
                     st.error("❌ ARIMA model is not available.")
                     st.info("Install required packages: `pip install statsmodels pmdarima`")
@@ -148,7 +181,6 @@ if st.button("🚀 Generate Forecast", type="primary"):
                 forecast_df = forecaster.predict(forecast_horizon)
 
             else:  # Simple Moving Average
-                # Use the proper SimpleMAForecaster class
                 forecaster = SimpleMAForecaster(
                     confidence_level=confidence_level
                 )
@@ -287,7 +319,16 @@ if 'forecast' in st.session_state:
                 # Re-fit on train data and predict test period
                 backtest_horizon = len(test_data)
 
-                if model_type == "ARIMA":
+                if model_type == "XGBoost":
+                    forecaster_eval = XGBoostForecaster(
+                        n_lags=min(7, len(train_data) // 4),
+                        confidence_level=confidence_level
+                    )
+                elif model_type == "Exponential Smoothing":
+                    forecaster_eval = ExponentialSmoothingForecaster(
+                        confidence_level=confidence_level
+                    )
+                elif model_type == "ARIMA":
                     if not ARIMA_AVAILABLE:
                         st.info("ARIMA not available for evaluation")
                     else:
