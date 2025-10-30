@@ -200,3 +200,22 @@ class BaseForecaster(ABC):
         upper_bound = predictions + margin
 
         return lower_bound, upper_bound
+
+    def _get_z_score(self, confidence_level: float) -> float:
+        """
+        Get z-score for given confidence level.
+
+        Args:
+            confidence_level: Confidence level (0-1)
+
+        Returns:
+            Z-score value
+        """
+        # Common z-scores for confidence intervals
+        z_scores = {
+            0.90: 1.645,
+            0.95: 1.960,
+            0.99: 2.576
+        }
+
+        return z_scores.get(confidence_level, 1.960)
