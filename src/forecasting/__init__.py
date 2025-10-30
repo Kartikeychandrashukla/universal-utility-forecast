@@ -1,36 +1,24 @@
-"""Forecasting models for utility price prediction"""
+"""
+Forecasting models for utility price prediction
 
-# Always available
+Production-ready models compatible with Python 3.12+ and 3.13+
+Optimized for Streamlit Cloud deployment
+"""
+
+# Core models - always available
 from src.forecasting.base_forecaster import BaseForecaster
 from src.forecasting.simple_ma_model import SimpleMAForecaster
+from src.forecasting.xgboost_model import XGBoostForecaster
+from src.forecasting.exponential_smoothing_model import ExponentialSmoothingForecaster
 
-# Core models - gracefully handle missing dependencies
-__all__ = ["BaseForecaster", "SimpleMAForecaster"]
+__all__ = [
+    "BaseForecaster",
+    "SimpleMAForecaster",
+    "XGBoostForecaster",
+    "ExponentialSmoothingForecaster",
+]
 
-try:
-    from src.forecasting.xgboost_model import XGBoostForecaster
-    __all__.append("XGBoostForecaster")
-except (ImportError, ModuleNotFoundError):
-    pass
-
-try:
-    from src.forecasting.exponential_smoothing_model import ExponentialSmoothingForecaster
-    __all__.append("ExponentialSmoothingForecaster")
-except (ImportError, ModuleNotFoundError):
-    pass
-
-try:
-    from src.forecasting.arima_model import ARIMAForecaster
-    __all__.append("ARIMAForecaster")
-except (ImportError, ModuleNotFoundError):
-    pass
-
-try:
-    from src.forecasting.prophet_model import ProphetForecaster
-    __all__.append("ProphetForecaster")
-except (ImportError, ModuleNotFoundError):
-    pass
-
+# Optional advanced models
 try:
     from src.forecasting.regression_model import RegressionForecaster
     __all__.append("RegressionForecaster")

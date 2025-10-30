@@ -10,35 +10,9 @@ import numpy as np
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-# Try to import forecasting models
-try:
-    from src.forecasting.xgboost_model import XGBoostForecaster
-    XGBOOST_AVAILABLE = True
-except (ImportError, ModuleNotFoundError) as e:
-    XGBOOST_AVAILABLE = False
-    XGBOOST_ERROR = str(e)
-
-try:
-    from src.forecasting.exponential_smoothing_model import ExponentialSmoothingForecaster
-    EXP_SMOOTH_AVAILABLE = True
-except (ImportError, ModuleNotFoundError) as e:
-    EXP_SMOOTH_AVAILABLE = False
-    EXP_SMOOTH_ERROR = str(e)
-
-try:
-    from src.forecasting.arima_model import ARIMAForecaster
-    ARIMA_AVAILABLE = True
-except (ImportError, ModuleNotFoundError) as e:
-    ARIMA_AVAILABLE = False
-    ARIMA_ERROR = str(e)
-
-try:
-    from src.forecasting.prophet_model import ProphetForecaster
-    PROPHET_AVAILABLE = True
-except (ImportError, ModuleNotFoundError) as e:
-    PROPHET_AVAILABLE = False
-    PROPHET_ERROR = str(e)
-
+# Import forecasting models
+from src.forecasting.xgboost_model import XGBoostForecaster
+from src.forecasting.exponential_smoothing_model import ExponentialSmoothingForecaster
 from src.forecasting.simple_ma_model import SimpleMAForecaster
 from src.utils.config_loader import load_config
 
@@ -74,40 +48,15 @@ with col1:
     )
 
 with col2:
-    # Build list of available models
-    available_models = []
-    if XGBOOST_AVAILABLE:
-        available_models.append("XGBoost")
-    if EXP_SMOOTH_AVAILABLE:
-        available_models.append("Exponential Smoothing")
-    if ARIMA_AVAILABLE:
-        available_models.append("ARIMA")
-    if PROPHET_AVAILABLE:
-        available_models.append("Prophet")
-    available_models.append("Simple Moving Average")  # Always available
+    # Available models (Python 3.12/3.13 compatible)
+    available_models = ["XGBoost", "Exponential Smoothing", "Simple Moving Average"]
 
     model_type = st.selectbox(
         "Forecast Model",
         available_models,
-        index=0,  # Default to first available model
-        help="Select forecasting algorithm"
+        index=0,
+        help="Select forecasting algorithm (all models are Python 3.12+ compatible)"
     )
-
-    # Show availability status
-    if not ARIMA_AVAILABLE or not PROPHET_AVAILABLE:
-        with st.expander("📋 Model Availability"):
-            st.write("**Available Models:**")
-            st.write(f"✅ Simple Moving Average (Python 3.12 compatible)")
-            if ARIMA_AVAILABLE:
-                st.write(f"✅ ARIMA")
-            else:
-                st.write(f"❌ ARIMA - Package not installed")
-                st.code("pip install statsmodels pmdarima", language="bash")
-            if PROPHET_AVAILABLE:
-                st.write(f"✅ Prophet")
-            else:
-                st.write(f"❌ Prophet - Package not installed")
-                st.code("pip install prophet", language="bash")
 
 with col3:
     confidence_level = st.slider(
@@ -157,26 +106,6 @@ if st.button("🚀 Generate Forecast", type="primary"):
                 forecaster = ExponentialSmoothingForecaster(
                     confidence_level=confidence_level
                 )
-                forecaster.fit(train_data)
-                forecast_df = forecaster.predict(forecast_horizon)
-
-            elif model_type == "ARIMA":
-                if not ARIMA_AVAILABLE:
-                    st.error("❌ ARIMA model is not available.")
-                    st.info("Install required packages: `pip install statsmodels pmdarima`")
-                    st.stop()
-
-                forecaster = ARIMAForecaster(config.get('forecasting', {}).get('models', {}).get('arima', {}))
-                forecaster.fit(train_data)
-                forecast_df = forecaster.predict(forecast_horizon)
-
-            elif model_type == "Prophet":
-                if not PROPHET_AVAILABLE:
-                    st.error("❌ Prophet model is not available.")
-                    st.info("Install required package: `pip install prophet`")
-                    st.stop()
-
-                forecaster = ProphetForecaster(config.get('forecasting', {}).get('models', {}).get('prophet', {}))
                 forecaster.fit(train_data)
                 forecast_df = forecaster.predict(forecast_horizon)
 
@@ -328,29 +257,19 @@ if 'forecast' in st.session_state:
                     forecaster_eval = ExponentialSmoothingForecaster(
                         confidence_level=confidence_level
                     )
-                elif model_type == "ARIMA":
-                    if not ARIMA_AVAILABLE:
-                        st.info("ARIMA not available for evaluation")
-                    else:
-                        forecaster_eval = ARIMAForecaster(config.get('forecasting', {}).get('models', {}).get('arima', {}))
-                elif model_type == "Prophet":
-                    if not PROPHET_AVAILABLE:
-                        st.info("Prophet not available for evaluation")
-                    else:
-                        forecaster_eval = ProphetForecaster(config.get('forecasting', {}).get('models', {}).get('prophet', {}))
                 else:  # Simple Moving Average
                     forecaster_eval = SimpleMAForecaster(confidence_level=confidence_level)
 
                 forecaster_eval.fit(train_data)
 
-                # For Simple MA, use the evaluate method directly
+                # Evaluate model
                 if model_type == "Simple Moving Average":
                     metrics = forecaster_eval.evaluate(test_data)
                     rmse = metrics['rmse']
                     mae = metrics['mae']
                     mape = metrics['mape']
                 else:
-                    # For ARIMA/Prophet, calculate metrics manually
+                    # For XGBoost/Exponential Smoothing, calculate metrics manually
                     from sklearn.metrics import mean_squared_error, mean_absolute_error
 
                     backtest_forecast = forecaster_eval.predict(backtest_horizon)
@@ -384,45 +303,78 @@ else:
     st.info("👆 Configure forecast parameters and click 'Generate Forecast' to begin!")
 
     st.markdown("### 📖 About Forecasting Models")
+    st.markdown("All models are **Python 3.12+ and 3.13+ compatible** and deployment-ready!")
 
-    tab1, tab2, tab3 = st.tabs(["ARIMA", "Prophet", "Simple MA"])
+    tab1, tab2, tab3 = st.tabs(["XGBoost", "Exponential Smoothing", "Simple MA"])
 
     with tab1:
         st.markdown("""
-        **ARIMA (AutoRegressive Integrated Moving Average)**
+        **XGBoost (Gradient Boosting)** ⚡ Recommended
 
-        ARIMA is a statistical model for time series forecasting that:
-        - Captures autocorrelations in the data
-        - Handles trends through differencing
-        - Works well for short to medium-term forecasts
-        - Automatically selects optimal parameters
+        XGBoost is a powerful machine learning model that:
+        - Uses gradient boosting with lag features for accurate predictions
+        - Automatically captures complex patterns and non-linear relationships
+        - Handles trend, seasonality, and volatility in time series data
+        - Provides excellent accuracy for short to medium-term forecasts
+        - Fully compatible with Python 3.12 and 3.13
+        - Production-ready with confidence intervals
 
-        Best for: Stationary or near-stationary time series
+        **How it works:**
+        - Creates lag features (previous 7 days by default)
+        - Adds rolling statistics (mean, std) for additional context
+        - Trains gradient boosting model on historical patterns
+        - Generates predictions with uncertainty bounds
+
+        **Best for:**
+        - Utility price forecasting with complex patterns
+        - Non-linear trends and seasonal variations
+        - Production deployments requiring high accuracy
         """)
 
     with tab2:
         st.markdown("""
-        **Prophet (Facebook Prophet)**
+        **Exponential Smoothing (Holt-Winters)** 📈 Recommended
 
-        Prophet is designed for business time series with:
-        - Strong seasonal patterns
-        - Holiday effects
-        - Missing data
-        - Outliers
+        Exponential Smoothing is a proven statistical method that:
+        - Captures trend and seasonal patterns automatically
+        - Uses weighted averages giving more importance to recent data
+        - Handles additive and multiplicative seasonality
+        - Works excellently for utility price data
+        - Fully compatible with Python 3.12 and 3.13
+        - Production-ready with confidence intervals
 
-        Best for: Data with clear seasonality and trends
+        **How it works:**
+        - Automatically detects seasonality (default: 7-day weekly pattern)
+        - Fits trend component for long-term direction
+        - Applies seasonal adjustments for recurring patterns
+        - Generates smooth, reliable forecasts
+
+        **Best for:**
+        - Utility prices with weekly/monthly patterns
+        - Data with clear trends and seasonality
+        - Reliable medium-term forecasts (30-365 days)
         """)
 
     with tab3:
         st.markdown("""
-        **Simple Moving Average** ✅ Python 3.12 Compatible
+        **Simple Moving Average** ⚡ Fast & Reliable
 
-        A production-ready forecasting model that:
+        A lightweight, production-ready forecasting model that:
         - Uses moving average with trend component
-        - Calculates confidence intervals based on volatility
-        - Optional seasonality support
-        - No external dependencies required (works with Python 3.12!)
+        - Calculates confidence intervals based on historical volatility
+        - Optional seasonality support for recurring patterns
+        - Minimal dependencies (no external ML packages)
+        - Fully compatible with Python 3.12 and 3.13
         - Provides full model evaluation metrics
 
-        Best for: Quick, reliable forecasts without complex dependencies
+        **How it works:**
+        - Calculates moving average of recent prices
+        - Estimates trend from recent data points
+        - Projects forward: MA + trend × time_step
+        - Adds seasonal component if requested
+
+        **Best for:**
+        - Quick baseline forecasts
+        - Simple trends without complex patterns
+        - Testing and validation
         """)
